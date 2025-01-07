@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appibox</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0A0A0A;
+            color: white;
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0A0A0A;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading-screen img {
+            width: 120px;
+            height: 120px;
+            animation: pulse 2s infinite;
+        }
+
+        .progress-bar {
+            width: 120px;
+            height: 2px;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #4B7BFF;
+            animation: loading 7s linear;
+        }
+
+        .app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding-top: 60px;
+            padding-bottom: 70px;
+            position: relative;
+        }
+
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #1A1A1A;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .user-email {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        section {
+            display: none;
+            padding: 1rem;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .project-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+            background: #1A1A1A;
+        }
+
+        .project-card:hover {
+            transform: scale(1.02);
+        }
+
+        .project-image-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+        }
+
+        .project-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .project-logo {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            padding: 5px;
+        }
+
+        .project-info {
+            padding: 1rem;
+        }
+
+        .chat-container {
+            background: #1A1A1A;
+            border-radius: 16px;
+            overflow: hidden;
+            height: 600px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .chat-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .new-message-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4B7BFF;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .notification-item {
+            background: #1A1A1A;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .notification-new-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4B7BFF;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .delete-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF4B4B;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-form {
+            background: #1A1A1A;
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #888;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #2A2A2A;
+            border: none;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .button-primary {
+            background: #4B7BFF;
+            color: white;
+        }
+
+        .button-secondary {
+            background: transparent;
+            border: 1px solid #4B7BFF;
+            color: #4B7BFF;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1rem 0;
+            color: #888;
+        }
+
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1A1A1A;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.75rem;
+            z-index: 100;
+        }
+
+        .nav-button {
+            background: none;
+            border: none;
+            color: #888;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-button.active {
+            color: #4B7BFF;
+        }
+
+        .nav-button i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: #1A1A1A;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .faq-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .faq-question {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #e5e7eb;
+        }
+
+        .faq-answer {
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes loading {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4B7BFF;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <img src="https://i.postimg.cc/1tbDPXHm/Captura-de-tela-2025-01-06-191111.png" alt="Appibox Logo">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Appibox</h1>
+            <div id="user-email" class="user-email"></div>
+        </header>
+
+        <section id="home" class="active">
+            <h2>Projetos em Destaque</h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-image-container">
+                        <img class="project-image" src="https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=400" alt="E-commerce Platform">
+                        <img class="project-logo" src="https://i.postimg.cc/dQd8GCRJ/Captura-de-tela-2025-01-06-191111.png" alt="Appibox Logo">
+                    </div>
+                    <div class="project-info">
+                        <h3>E-commerce Platform</h3>
+                        <span class="category">Web</span>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-image-container">
+                        <img class="project-image" src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400" alt="Healthcare App">
+                        <img class="project-logo" src="https://i.postimg.cc/dQd8GCRJ/Captura-de-tela-2025-01-06-191111.png" alt="Appibox Logo">
+                    </div>
+                    <div class="project-info">
+                        <h3>Healthcare App</h3>
+                        <span class="category">Mobile</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="notifications">
+            <div class="notifications-header">
+                <h2>Notificações</h2>
+                <button id="toggleNotifications" class="toggle-button">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div id="notifications-container"></div>
+        </section>
+
+        <section id="chat">
+            <h2>Chat</h2>
+            <div class="chat-container">
+                <iframe id="chat-widget" src="https://platform.zaia.app/embed/chat/19948" class="chat-frame"></iframe>
+                <div id="newMessageBadge" class="new-message-badge" style="display: none;">
+                    Nova mensagem
+                </div>
+            </div>
+        </section>
+
+        <section id="faq">
+            <h2>Perguntas Frequentes (FAQs)</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <h3 class="faq-question">Qual a diferença entre um app e um app web?</h3>
+                    <p class="faq-answer">Um app é uma aplicação desenvolvida para rodar diretamente em dispositivos específicos, como smartphones ou computadores, sendo instalada a partir de lojas como Google Play ou App Store. Já um app web é acessado por meio de navegadores, sem necessidade de instalação, funcionando em qualquer dispositivo com internet.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question">O que é um protótipo?</h3>
+                    <p class="faq-answer">Um protótipo é uma versão inicial ou modelo funcional de um produto, criado para demonstrar como ele vai funcionar e parecer antes do desenvolvimento completo. Ele permite testes, ajustes e validações antes da entrega final.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question">Como posso receber meu app personalizado?</h3>
+                    <p class="faq-answer">Entre em contato com nosso chatbot e envie as informações da sua marca. Nossa equipe analisará sua mensagem e, em menos de 24 horas, apresentará um protótipo personalizado para você revisar e aprovar.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="auth">
+            <h2>Conta</h2>
+            <div id="auth-container" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+                <button onclick="handleAuth('login')" class="button button-primary">Entrar</button>
+                <div class="divider">ou</div>
+                <button onclick="handleAuth('register')" class="button button-secondary">Criar Conta</button>
+            </div>
+        </section>
+
+        <nav class="nav">
+            <button onclick="showSection('home')" class="nav-button active">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </button>
+            <button onclick="showSection('notifications')" class="nav-button" id="notifications-tab">
+                <i class="fas fa-bell"></i>
+                <span>Notificações</span>
+                <span id="notificationBadge" class="notification-badge">0</span>
+            </button>
+            <button onclick="showSection('chat')" class="nav-button">
+                <i class="fas fa-comments"></i>
+                <span>Chat</span>
+            </button>
+            <button onclick="showSection('faq')" class="nav-button">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ</span>
+            </button>
+            <button onclick="showSection('auth')" class="nav-button">
+                <i class="fas fa-user"></i>
+                <span>Conta</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        let notifications = [
+            { id: 1, title: 'Novo Artigo Publicado', message: 'O Futuro do Desenvolvimento Web - Leia agora!', isNew: true },
+            { id: 2, title: 'Atualização de Projeto', message: 'Seu projeto foi atualizado com novos recursos', isNew: true },
+            { id: 3, title: 'Promoção Especial', message: '15% de desconto em projetos personalizados', isNew: true }
+        ];
+
+        let showNewNotifications = true;
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+            }, 7000);
+
+            const savedEmail = localStorage.getItem('userEmail');
+            if (savedEmail) {
+                document.getElementById('user-email').textContent = savedEmail;
+                showToast(`Bem-vindo de volta, ${savedEmail}!`);
+            }
+
+            updateNotifications();
+            
+            setTimeout(() => {
+                document.getElementById('newMessageBadge').style.display = 'block';
+            }, 5000);
+        });
+
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        function updateNotifications() {
+            const container = document.getElementById('notifications-container');
+            const badge = document.getElementById('notificationBadge');
+            
+            badge.textContent = notifications.length;
+            badge.style.display = notifications.length > 0 ? 'flex' : 'none';
+            
+            container.innerHTML = notifications
+                .filter(n => showNewNotifications || !n.isNew)
+                .map(notification => `
+                    <div class="notification-item">
+                        ${notification.isNew ? '<span class="notification-new-badge">Novo</span>' : ''}
+                        <h3 class="notification-title">${notification.title}</h3>
+                        <p class="notification-message">${notification.message}</p>
+                        <button onclick="removeNotification(${notification.id})" class="delete-button">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('') || '<p>Nenhuma notificação</p>';
+        }
+
+        function toggleNotifications() {
+            showNewNotifications = !showNewNotifications;
+            document.getElementById('toggleNotifications').innerHTML = 
+                `<i class="fas fa-${showNewNotifications ? 'eye-slash' : 'eye'}"></i>`;
+            updateNotifications();
+        }
+
+        function removeNotification(id) {
+            notifications = notifications.filter(n => n.id !== id);
+            updateNotifications();
+            showToast('Notificação removida');
+        }
+
+        function handleAuth(type) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showToast('Por favor, preencha todos os campos', 'error');
+                return;
+            }
+
+            localStorage.setItem('userEmail', email);
+            document.getElementById('user-email').textContent = email;
+            
+            showToast(`${type === 'login' ? 'Login' : 'Cadastro'} realizado com sucesso!`);
+            
+            const authContainer = document.getElementById('auth-container');
+            authContainer.innerHTML = `
+                <p style="text-align: center; margin-bottom: 1rem;">Logado como: ${email}</p>
+                <button onclick="handleLogout()" class="button button-primary" style="background-color: #ef4444;">Sair</button>
+            `;
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('userEmail');
+            document.getElementById('user-email').textContent = '';
+            showToast('Logout realizado com sucesso');
+            
+            const authContainer = document.getElementById('auth-container');
+            authContainer.innerHTML = `
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+                <button onclick="handleAuth('login')" class="button button-primary">Entrar</button>
+                <div class="divider">ou</div>
+                <button onclick="handleAuth('register')" class="button button-secondary">Criar Conta</button>
+            `;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            toast.style.background = type === 'error' ? '#FF4B4B' : '#4B7BFF';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        document.getElementById('toggleNotifications').addEventListener('click', toggleNotifications);
+    </script>
+</body>
+</html>
